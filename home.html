@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CyberBasicClassRoom - Home</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+scroll-behavior:smooth;
+}
+
+body{
+background:#050505;
+color:#d6d6d6;
+font-family:'Cinzel',serif;
+overflow-x:hidden;
+}
+
+/* BACKGROUND */
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:
+linear-gradient(rgba(0,0,0,.88),rgba(0,0,0,.95)),
+url('wallpaper.jpg');
+background-size:cover;
+background-position:center;
+filter:brightness(.35);
+z-index:-2;
+}
+
+body::after{
+content:"";
+position:fixed;
+inset:0;
+background:radial-gradient(circle at center,
+rgba(120,0,0,.25),
+transparent 70%);
+z-index:-1;
+}
+
+/* MATRIX */
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+opacity:.08;
+z-index:-3;
+}
+
+/* HERO */
+
+.hero{
+text-align:center;
+padding:40px 20px;
+}
+
+.hero img{
+width:170px;
+border-radius:50%;
+border:2px solid #8b0000;
+box-shadow:0 0 30px rgba(139,0,0,.8);
+margin-bottom:20px;
+animation:pulse 2s infinite;
+}
+
+.hero h1{
+font-family:'UnifrakturCook',cursive;
+font-size:60px;
+color:#b30000;
+text-shadow:0 0 20px #700;
+}
+
+.hero p{
+margin-top:10px;
+color:#bbb;
+letter-spacing:2px;
+}
+
+/* ANIMATION */
+
+@keyframes pulse{
+0%{transform:scale(1);}
+50%{transform:scale(1.05);}
+100%{transform:scale(1);}
+}
+
+/* TERMINAL */
+
+.terminal{
+background:#0a0a0a;
+border:1px solid #8b0000;
+padding:22px;
+border-radius:18px;
+margin:25px;
+box-shadow:0 0 20px rgba(139,0,0,.5);
+white-space:pre-wrap;
+font-size:14px;
+color:#ddd;
+}
+
+/* NAV */
+
+.nav{
+display:flex;
+overflow:auto;
+gap:12px;
+padding:0 25px;
+margin-bottom:30px;
+}
+
+.nav button{
+padding:12px 20px;
+background:#111;
+border:1px solid #8b0000;
+border-radius:12px;
+color:#ddd;
+cursor:pointer;
+transition:.3s;
+font-family:'Cinzel',serif;
+}
+
+.nav button:hover{
+background:#8b0000;
+}
+
+/* CARD */
+
+.card{
+background:#0a0a0a;
+border:1px solid #8b0000;
+border-radius:22px;
+overflow:hidden;
+margin:25px;
+box-shadow:0 0 20px rgba(139,0,0,.5);
+}
+
+.card iframe{
+width:100%;
+height:230px;
+border:none;
+}
+
+.card-content{
+padding:25px;
+}
+
+.card h2{
+font-family:'UnifrakturCook',cursive;
+font-size:38px;
+color:#b30000;
+margin-bottom:15px;
+}
+
+.card p{
+line-height:1.9;
+font-size:15px;
+color:#ccc;
+}
+
+/* TOOLS */
+
+.tools{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+gap:15px;
+margin-top:20px;
+}
+
+.tool{
+background:#111;
+border:1px solid #8b0000;
+padding:18px;
+border-radius:15px;
+text-align:center;
+box-shadow:0 0 10px rgba(139,0,0,.4);
+}
+
+/* NEWS */
+
+.news-title{
+text-align:center;
+font-family:'UnifrakturCook',cursive;
+font-size:45px;
+margin:40px 0 20px;
+color:#b30000;
+text-shadow:0 0 15px #700;
+}
+
+#newsBox{
+background:#0a0a0a;
+border:1px solid #8b0000;
+padding:25px;
+border-radius:20px;
+margin:25px;
+box-shadow:0 0 20px rgba(139,0,0,.5);
+line-height:2;
+}
+
+/* FOOTER */
+
+footer{
+padding:35px;
+text-align:center;
+color:#888;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+.hero h1{
+font-size:40px;
+}
+
+.card h2{
+font-size:28px;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<!-- HERO -->
+
+<div class="hero">
+
+<img src="logo.png">
+
+<h1>Cyber Realm</h1>
+
+<p>DARK GOTHIC CYBER COMMUNITY</p>
+
+</div>
+
+<!-- TERMINAL -->
+
+<div class="terminal" id="terminal"></div>
+
+<!-- NAV -->
+
+<div class="nav">
+
+<button onclick="go('cyber')">Cyber</button>
+<button onclick="go('bug')">Bug Hunter</button>
+<button onclick="go('html')">HTML</button>
+<button onclick="go('node')">NodeJS</button>
+<button onclick="go('termux')">Termux</button>
+<button onclick="go('bounty')">Bug Bounty</button>
+<button onclick="go('tools')">Tools</button>
+
+</div>
+
+<!-- CYBER -->
+
+<div class="card" id="cyber">
+
+<iframe src="https://www.youtube.com/embed/inWWhr5tnEA" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>CYBER SCURITY</h2>
+
+<p>
+Belajar keamanan digital, jaringan, server, HTTPS dan perlindungan data modern.
+</p>
+
+</div>
+
+</div>
+
+<!-- BUG -->
+
+<div class="card" id="bug">
+
+<iframe src="https://www.youtube.com/embed/U_P23SqJaDc" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>BUG HUNTER</h2>
+
+<p>
+Panduan mencari vulnerability secara legal dan memahami responsible disclosure.
+</p>
+
+</div>
+
+</div>
+
+<!-- HTML -->
+
+<div class="card" id="html">
+
+<iframe src="https://www.youtube.com/embed/qz0aGYrrlhU" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>HTML LEARNING</h2>
+
+<p>
+Belajar HTML, CSS dan JavaScript untuk membuat website modern.
+</p>
+
+</div>
+
+</div>
+
+<!-- NODE -->
+
+<div class="card" id="node">
+
+<iframe src="https://www.youtube.com/embed/TlB_eWDSMt4" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>NODE JS</h2>
+
+<p>
+Belajar backend modern menggunakan Node JS dan memahami server website.
+</p>
+
+</div>
+
+</div>
+
+<!-- TERMUX -->
+
+<div class="card" id="termux">
+
+<iframe src="https://www.youtube.com/embed/fis26HvvDII" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>TERMUX TOOLS</h2>
+
+<p>
+Belajar command Linux Android dan tools cyber security untuk pembelajaran legal.
+</p>
+
+</div>
+
+</div>
+
+<!-- BOUNTY -->
+
+<div class="card" id="bounty">
+
+<iframe src="https://www.youtube.com/embed/2TofunAI6fU" allowfullscreen></iframe>
+
+<div class="card-content">
+
+<h2>BUG BOUNTY</h2>
+
+<p>
+Panduan menjadi bug hunter pemula dan belajar program bug bounty legal.
+</p>
+
+</div>
+
+</div>
+
+<!-- TOOLS -->
+
+<div class="card" id="tools">
+
+<div class="card-content">
+
+<h2>Dark Tools</h2>
+
+<div class="tools">
+
+<div class="tool">NMAP</div>
+<div class="tool">SQLMAP</div>
+<div class="tool">BURP SUITE</div>
+<div class="tool">OWASP ZAP</div>
+<div class="tool">TERMUX</div>
+<div class="tool">WIRESHARK</div>
+<div class="tool">METASPLOIT</div>
+<div class="tool">HYDRA</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- NEWS -->
+
+<h1 class="news-title">
+Live Cyber News
+</h1>
+
+<div id="newsBox">
+Loading Dark Cyber News...
+</div>
+
+<footer>
+
+CyberBasicClassRoom © 2026
+
+</footer>
+
+<script>
+
+/* TERMINAL */
+
+const terminalText=`
+
+root@darkrealm:~# connecting...
+access granted...
+loading shadow protocol...
+database linked...
+system online...
+welcome back master...
+`;
+
+let i=0;
+
+function startTerminal(){
+
+function type(){
+
+if(i<terminalText.length){
+
+document.getElementById("terminal").innerHTML += terminalText.charAt(i);
+
+i++;
+
+setTimeout(type,35);
+
+}
+
+}
+
+type();
+
+}
+
+startTerminal();
+
+/* NAV */
+
+function go(id){
+
+document.getElementById(id).scrollIntoView();
+
+}
+
+/* MATRIX */
+
+const canvas=document.getElementById("matrix");
+
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+const letters="01DARKCYBER";
+const fontSize=14;
+const columns=canvas.width/fontSize;
+const drops=[];
+
+for(let x=0;x<columns;x++){
+
+drops[x]=1;
+
+}
+
+function draw(){
+
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="#8b0000";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+
+const text=letters.charAt(Math.floor(Math.random()*letters.length));
+
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+
+if(drops[i]*fontSize>canvas.height&&Math.random()>0.975){
+
+drops[i]=0;
+
+}
+
+drops[i]++;
+
+}
+
+}
+
+setInterval(draw,33);
+
+/* FAKE NEWS */
+
+const cyberNews=[
+
+"🔥 Dark web activity increased worldwide",
+
+"⚡ Ethical hackers securing modern systems",
+
+"☠ New phishing attacks detected globally",
+
+"🚀 Bug bounty community growing rapidly",
+
+"🛡 Linux security patch released today",
+
+"💻 HTML & JavaScript remain essential for developers",
+
+"📡 Cyber radar system online",
+
+"🚨 Fake DDOS tracker activated"
+
+];
+
+let newsIndex=0;
+
+function updateNews(){
+
+document.getElementById("newsBox").innerHTML=
+
+"<span style='color:#b30000;'>["+
+
+new Date().toLocaleTimeString()+
+
+"]</span><br><br>"+
+
+cyberNews[newsIndex];
+
+newsIndex++;
+
+if(newsIndex>=cyberNews.length){
+
+newsIndex=0;
+
+}
+
+}
+
+updateNews();
+
+setInterval(updateNews,4000);
+
+</script>
+
+</body>
+</html>
