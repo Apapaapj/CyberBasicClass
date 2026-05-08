@@ -1,0 +1,823 @@
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+//        ALZZxCYBER BOT
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+const { Telegraf } = require('telegraf')
+const axios = require('axios')
+const dns = require('dns')
+const os = require('os')
+const fs = require('fs')
+const crypto = require('crypto')
+const chalk = require('chalk')
+const moment = require('moment-timezone')
+
+const bot = new Telegraf('8286438302:AAEibrz61iF3JpVV9vLLneYSTGJ_8_aVOO4')
+const OWNER_ID = '8229333628'
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// DATABASE
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+const dbFile = './users.json'
+
+if (!fs.existsSync(dbFile)) {
+fs.writeFileSync(dbFile, JSON.stringify([]))
+}
+
+const loadDB = () => {
+return JSON.parse(fs.readFileSync(dbFile))
+}
+
+const saveDB = (data) => {
+fs.writeFileSync(dbFile, JSON.stringify(data, null, 2))
+}
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// AUTO REGISTER USER
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.use((ctx, next) => {
+
+if (!ctx.from) return next()
+
+const users = loadDB()
+
+const userId = ctx.from.id
+
+const user = users.find(u => u.id === userId)
+
+if (!user) {
+
+users.push({
+
+id: userId,
+name: ctx.from.first_name,
+username: ctx.from.username || 'No Username',
+balance: 0,
+premium: false,
+level: 1,
+xp: 0,
+joined: new Date().toLocaleString()
+
+})
+
+saveDB(users)
+
+console.log(`
+[NEW USER]
+${ctx.from.first_name}
+`)
+}
+
+next()
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// ANTI SPAM
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+const spamMap = new Map()
+
+bot.use((ctx, next) => {
+
+if (!ctx.from) return next()
+
+const userId = ctx.from.id
+const now = Date.now()
+
+if (!spamMap.has(userId)) {
+
+spamMap.set(userId, {
+count: 1,
+last: now,
+mute: 0
+})
+
+return next()
+
+}
+
+const data = spamMap.get(userId)
+
+if (data.mute > now) {
+
+return ctx.reply(`
+🚫 Anti Spam
+
+⏳ Tunggu sebentar.
+`)
+
+}
+
+if (now - data.last < 5000) {
+
+data.count++
+
+} else {
+
+data.count = 1
+
+}
+
+data.last = now
+
+if (data.count >= 7) {
+
+data.mute = now + 30000
+
+return ctx.reply(`
+🚨 Spam Detected
+
+🔒 Muted 30 Detik
+`)
+
+}
+
+next()
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// LEVEL SYSTEM
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.use((ctx, next) => {
+
+if (!ctx.from) return next()
+
+const users = loadDB()
+
+const user = users.find(
+u => u.id === ctx.from.id
+)
+
+if (user) {
+
+user.xp += 10
+
+const need = user.level * 100
+
+if (user.xp >= need) {
+
+user.level += 1
+user.xp = 0
+
+ctx.reply(`
+🎉 LEVEL UP
+
+⬆️ Level ${user.level}
+`)
+
+}
+
+saveDB(users)
+
+}
+
+next()
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// START
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.start((ctx) => {
+
+ctx.reply(`
+╔═══〔 🔥 ALZZxCYBER 🔥 〕═══╗
+
+👋 Welcome ${ctx.from.first_name}
+
+⚡ Bot Online
+🛡 Security Active
+
+📚 Ketik /menu
+
+╚══════════════════════╝
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// MENU
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('menu', (ctx) => {
+
+ctx.reply(`
+╔═══〔 ⚡ ALZZxCYBER MENU ⚡ 〕═══╗
+
+🌐 NETWORK
+/ip
+/dns
+/httpstatus
+
+🔍 OSINT
+/username
+/emailcheck
+/domain
+
+💻 SYSTEM
+/runtime
+/platform
+/ram
+/cpu
+
+🛡 SECURITY
+/hash
+/base64
+/uuid
+/genpass
+
+👤 USER
+/profile
+/daily
+/leaderboard
+
+⚙ UTILITIES
+/randomip
+/randomuser
+/randommail
+/time
+/date
+
+👑 OWNER
+/addbalance
+/addprem
+
+╚══════════════════════╝
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// PROFILE
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('profile', (ctx) => {
+
+const users = loadDB()
+
+const user = users.find(
+u => u.id === ctx.from.id
+)
+
+ctx.reply(`
+╔═══〔 👤 PROFILE 👤 〕═══╗
+
+🆔 ${user.id}
+👤 ${user.name}
+📛 @${user.username}
+
+💰 Balance : ${user.balance}
+💎 Premium : ${user.premium}
+
+⭐ Level : ${user.level}
+⚡ XP : ${user.xp}
+
+📅 ${user.joined}
+
+╚══════════════════════╝
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// DAILY
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('daily', (ctx) => {
+
+const users = loadDB()
+
+const user = users.find(
+u => u.id === ctx.from.id
+)
+
+const reward = Math.floor(Math.random() * 5000)
+
+user.balance += reward
+
+saveDB(users)
+
+ctx.reply(`
+🎁 DAILY REWARD
+
+💰 +${reward}
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// LEADERBOARD
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('leaderboard', (ctx) => {
+
+const users = loadDB()
+
+const sorted = users.sort(
+(a,b) => b.balance - a.balance
+)
+
+let text = `🏆 TOP USERS\n`
+
+sorted.slice(0,10).forEach((u,i) => {
+
+text += `
+${i+1}. ${u.name}
+💰 ${u.balance}
+`
+
+})
+
+ctx.reply(text)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// IP LOOKUP
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('ip', async(ctx) => {
+
+const ip = ctx.message.text.split(' ')[1]
+
+if (!ip)
+return ctx.reply('Example: /ip 8.8.8.8')
+
+try {
+
+const res = await axios.get(
+`http://ip-api.com/json/${ip}`
+)
+
+const d = res.data
+
+ctx.reply(`
+🌐 IP LOOKUP
+
+IP : ${d.query}
+Country : ${d.country}
+City : ${d.city}
+ISP : ${d.isp}
+`)
+
+} catch {
+
+ctx.reply('Failed.')
+
+}
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// DNS LOOKUP
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('dns', (ctx) => {
+
+const domain = ctx.message.text.split(' ')[1]
+
+if (!domain)
+return ctx.reply('Example: /dns google.com')
+
+dns.lookup(domain, (err,address) => {
+
+if (err)
+return ctx.reply('DNS Failed')
+
+ctx.reply(`
+🌍 DNS LOOKUP
+
+Domain : ${domain}
+IP : ${address}
+`)
+
+})
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// HTTP STATUS
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('httpstatus', async(ctx) => {
+
+const url = ctx.message.text.split(' ')[1]
+
+if (!url)
+return ctx.reply('Example: /httpstatus https://google.com')
+
+try {
+
+const res = await axios.get(url)
+
+ctx.reply(`
+🌐 HTTP STATUS
+
+${res.status}
+`)
+
+} catch {
+
+ctx.reply('Request Failed')
+
+}
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// HASH
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('hash', (ctx) => {
+
+const text = ctx.message.text.split(' ').slice(1).join(' ')
+
+if (!text)
+return ctx.reply('Example: /hash hello')
+
+const hash = crypto
+.createHash('sha256')
+.update(text)
+.digest('hex')
+
+ctx.reply(`
+🔒 SHA256
+
+${hash}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// BASE64
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('base64', (ctx) => {
+
+const text = ctx.message.text.split(' ').slice(1).join(' ')
+
+if (!text)
+return ctx.reply('Example: /base64 hello')
+
+const result =
+Buffer.from(text).toString('base64')
+
+ctx.reply(`
+🔐 BASE64
+
+${result}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// UUID
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('uuid', (ctx) => {
+
+ctx.reply(`
+🆔 UUID
+
+${crypto.randomUUID()}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// PASSWORD
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('genpass', (ctx) => {
+
+const pass =
+crypto.randomBytes(10).toString('hex')
+
+ctx.reply(`
+🔑 PASSWORD
+
+${pass}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// RANDOM IP
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('randomip', (ctx) => {
+
+const ip =
+`${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`
+
+ctx.reply(`
+🌐 RANDOM IP
+
+${ip}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// RANDOM USER
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('randomuser', (ctx) => {
+
+const users = [
+'ShadowRoot',
+'CyberGhost',
+'DarkNet',
+'NullByte',
+'HexaRoot'
+]
+
+const pick =
+users[Math.floor(Math.random()*users.length)]
+
+ctx.reply(`
+👤 RANDOM USER
+
+${pick}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// RANDOM EMAIL
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('randommail', (ctx) => {
+
+const mail =
+`user${Math.floor(Math.random()*999)}@gmail.com`
+
+ctx.reply(`
+📧 RANDOM EMAIL
+
+${mail}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// TIME
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('time', (ctx) => {
+
+const time = moment()
+.tz('Asia/Jakarta')
+.format('HH:mm:ss')
+
+ctx.reply(`
+⏰ TIME
+
+${time}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// DATE
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('date', (ctx) => {
+
+const date = moment()
+.tz('Asia/Jakarta')
+.format('DD/MM/YYYY')
+
+ctx.reply(`
+📅 DATE
+
+${date}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// RUNTIME
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('runtime', (ctx) => {
+
+ctx.reply(`
+💻 SYSTEM INFO
+
+Platform : ${os.platform()}
+RAM : ${(os.totalmem()/1024/1024/1024).toFixed(2)} GB
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// PLATFORM
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('platform', (ctx) => {
+
+ctx.reply(`
+📱 PLATFORM
+
+${os.platform()}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// RAM
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('ram', (ctx) => {
+
+ctx.reply(`
+💾 RAM
+
+${(os.totalmem()/1024/1024/1024).toFixed(2)} GB
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// CPU
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('cpu', (ctx) => {
+
+ctx.reply(`
+🖥 CPU
+
+${os.cpus()[0].model}
+`)
+
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// USERNAME CHECK
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('username', (ctx) => {
+
+const username =
+ctx.message.text.split(' ')[1]
+
+if (!username)
+return ctx.reply(
+'Example: /username johndoe'
+)
+
+ctx.reply(`
+🔍 USERNAME CHECK
+
+Username : ${username}
+
+Possible Platforms:
+• Telegram
+• GitHub
+• TikTok
+• Instagram
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// EMAIL CHECK
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('emailcheck', (ctx) => {
+
+const email =
+ctx.message.text.split(' ')[1]
+
+if (!email)
+return ctx.reply(
+'Example: /emailcheck test@gmail.com'
+)
+
+ctx.reply(`
+📧 EMAIL CHECK
+
+Email : ${email}
+
+✅ Valid Format
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// DOMAIN
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('domain', (ctx) => {
+
+const domain =
+ctx.message.text.split(' ')[1]
+
+if (!domain)
+return ctx.reply(
+'Example: /domain google.com'
+)
+
+ctx.reply(`
+🌍 DOMAIN INFO
+
+${domain}
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// OWNER ADD BALANCE
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('addbalance', (ctx) => {
+
+if (String(ctx.from.id) !== OWNER_ID)
+return ctx.reply('❌ Owner Only')
+
+const args = ctx.message.text.split(' ')
+
+const targetId = Number(args[1])
+const amount = Number(args[2])
+
+const users = loadDB()
+
+const user = users.find(
+u => u.id === targetId
+)
+
+if (!user)
+return ctx.reply('User not found')
+
+user.balance += amount
+
+saveDB(users)
+
+ctx.reply(`
+✅ Balance Added
+
+💰 +${amount}
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// OWNER ADD PREMIUM
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('addprem', (ctx) => {
+
+if (String(ctx.from.id) !== OWNER_ID)
+return ctx.reply('❌ Owner Only')
+
+const targetId =
+Number(ctx.message.text.split(' ')[1])
+
+const users = loadDB()
+
+const user = users.find(
+u => u.id === targetId
+)
+
+if (!user)
+return ctx.reply('User not found')
+
+user.premium = true
+
+saveDB(users)
+
+ctx.reply(`
+💎 Premium Added
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// ABOUT
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('about', (ctx) => {
+
+ctx.reply(`
+🤖 ALZZxCYBER
+l. =
+⚡ Advanced Telegram Bot
+🛡 Security System Active
+💻 Runtime NodeJS
+`)
+})
+
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+// OWNER
+//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
+
+bot.command('owner', (ctx) => {
+
+ctx.reply(`
+👑 OWNER
+
+ID : ${8229333628}
+`)
+})
+
+//
