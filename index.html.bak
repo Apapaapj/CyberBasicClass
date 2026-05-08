@@ -1,823 +1,329 @@
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-//        ALZZxCYBER BOT
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-const { Telegraf } = require('telegraf')
-const axios = require('axios')
-const dns = require('dns')
-const os = require('os')
-const fs = require('fs')
-const crypto = require('crypto')
-const chalk = require('chalk')
-const moment = require('moment-timezone')
-
-const bot = new Telegraf('8286438302:AAEibrz61iF3JpVV9vLLneYSTGJ_8_aVOO4')
-const OWNER_ID = '8229333628'
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// DATABASE
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-const dbFile = './users.json'
-
-if (!fs.existsSync(dbFile)) {
-fs.writeFileSync(dbFile, JSON.stringify([]))
-}
-
-const loadDB = () => {
-return JSON.parse(fs.readFileSync(dbFile))
-}
-
-const saveDB = (data) => {
-fs.writeFileSync(dbFile, JSON.stringify(data, null, 2))
-}
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// AUTO REGISTER USER
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.use((ctx, next) => {
-
-if (!ctx.from) return next()
-
-const users = loadDB()
-
-const userId = ctx.from.id
-
-const user = users.find(u => u.id === userId)
-
-if (!user) {
-
-users.push({
-
-id: userId,
-name: ctx.from.first_name,
-username: ctx.from.username || 'No Username',
-balance: 0,
-premium: false,
-level: 1,
-xp: 0,
-joined: new Date().toLocaleString()
-
-})
-
-saveDB(users)
-
-console.log(`
-[NEW USER]
-${ctx.from.first_name}
-`)
-}
-
-next()
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// ANTI SPAM
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-const spamMap = new Map()
-
-bot.use((ctx, next) => {
-
-if (!ctx.from) return next()
-
-const userId = ctx.from.id
-const now = Date.now()
-
-if (!spamMap.has(userId)) {
-
-spamMap.set(userId, {
-count: 1,
-last: now,
-mute: 0
-})
-
-return next()
-
-}
-
-const data = spamMap.get(userId)
-
-if (data.mute > now) {
-
-return ctx.reply(`
-🚫 Anti Spam
-
-⏳ Tunggu sebentar.
-`)
-
-}
-
-if (now - data.last < 5000) {
-
-data.count++
-
-} else {
-
-data.count = 1
-
-}
-
-data.last = now
-
-if (data.count >= 7) {
-
-data.mute = now + 30000
-
-return ctx.reply(`
-🚨 Spam Detected
-
-🔒 Muted 30 Detik
-`)
-
-}
-
-next()
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// LEVEL SYSTEM
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.use((ctx, next) => {
-
-if (!ctx.from) return next()
-
-const users = loadDB()
-
-const user = users.find(
-u => u.id === ctx.from.id
-)
-
-if (user) {
-
-user.xp += 10
-
-const need = user.level * 100
-
-if (user.xp >= need) {
-
-user.level += 1
-user.xp = 0
-
-ctx.reply(`
-🎉 LEVEL UP
-
-⬆️ Level ${user.level}
-`)
-
-}
-
-saveDB(users)
-
-}
-
-next()
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// START
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.start((ctx) => {
-
-ctx.reply(`
-╔═══〔 🔥 ALZZxCYBER 🔥 〕═══╗
-
-👋 Welcome ${ctx.from.first_name}
-
-⚡ Bot Online
-🛡 Security Active
-
-📚 Ketik /menu
-
-╚══════════════════════╝
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// MENU
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('menu', (ctx) => {
-
-ctx.reply(`
-╔═══〔 ⚡ ALZZxCYBER MENU ⚡ 〕═══╗
-
-🌐 NETWORK
-/ip
-/dns
-/httpstatus
-
-🔍 OSINT
-/username
-/emailcheck
-/domain
-
-💻 SYSTEM
-/runtime
-/platform
-/ram
-/cpu
-
-🛡 SECURITY
-/hash
-/base64
-/uuid
-/genpass
-
-👤 USER
-/profile
-/daily
-/leaderboard
-
-⚙ UTILITIES
-/randomip
-/randomuser
-/randommail
-/time
-/date
-
-👑 OWNER
-/addbalance
-/addprem
-
-╚══════════════════════╝
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// PROFILE
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('profile', (ctx) => {
-
-const users = loadDB()
-
-const user = users.find(
-u => u.id === ctx.from.id
-)
-
-ctx.reply(`
-╔═══〔 👤 PROFILE 👤 〕═══╗
-
-🆔 ${user.id}
-👤 ${user.name}
-📛 @${user.username}
-
-💰 Balance : ${user.balance}
-💎 Premium : ${user.premium}
-
-⭐ Level : ${user.level}
-⚡ XP : ${user.xp}
-
-📅 ${user.joined}
-
-╚══════════════════════╝
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// DAILY
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('daily', (ctx) => {
-
-const users = loadDB()
-
-const user = users.find(
-u => u.id === ctx.from.id
-)
-
-const reward = Math.floor(Math.random() * 5000)
-
-user.balance += reward
-
-saveDB(users)
-
-ctx.reply(`
-🎁 DAILY REWARD
-
-💰 +${reward}
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// LEADERBOARD
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('leaderboard', (ctx) => {
-
-const users = loadDB()
-
-const sorted = users.sort(
-(a,b) => b.balance - a.balance
-)
-
-let text = `🏆 TOP USERS\n`
-
-sorted.slice(0,10).forEach((u,i) => {
-
-text += `
-${i+1}. ${u.name}
-💰 ${u.balance}
-`
-
-})
-
-ctx.reply(text)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// IP LOOKUP
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('ip', async(ctx) => {
-
-const ip = ctx.message.text.split(' ')[1]
-
-if (!ip)
-return ctx.reply('Example: /ip 8.8.8.8')
-
-try {
-
-const res = await axios.get(
-`http://ip-api.com/json/${ip}`
-)
-
-const d = res.data
-
-ctx.reply(`
-🌐 IP LOOKUP
-
-IP : ${d.query}
-Country : ${d.country}
-City : ${d.city}
-ISP : ${d.isp}
-`)
-
-} catch {
-
-ctx.reply('Failed.')
-
-}
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// DNS LOOKUP
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('dns', (ctx) => {
-
-const domain = ctx.message.text.split(' ')[1]
-
-if (!domain)
-return ctx.reply('Example: /dns google.com')
-
-dns.lookup(domain, (err,address) => {
-
-if (err)
-return ctx.reply('DNS Failed')
-
-ctx.reply(`
-🌍 DNS LOOKUP
-
-Domain : ${domain}
-IP : ${address}
-`)
-
-})
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// HTTP STATUS
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('httpstatus', async(ctx) => {
-
-const url = ctx.message.text.split(' ')[1]
-
-if (!url)
-return ctx.reply('Example: /httpstatus https://google.com')
-
-try {
-
-const res = await axios.get(url)
-
-ctx.reply(`
-🌐 HTTP STATUS
-
-${res.status}
-`)
-
-} catch {
-
-ctx.reply('Request Failed')
-
-}
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// HASH
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('hash', (ctx) => {
-
-const text = ctx.message.text.split(' ').slice(1).join(' ')
-
-if (!text)
-return ctx.reply('Example: /hash hello')
-
-const hash = crypto
-.createHash('sha256')
-.update(text)
-.digest('hex')
-
-ctx.reply(`
-🔒 SHA256
-
-${hash}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// BASE64
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('base64', (ctx) => {
-
-const text = ctx.message.text.split(' ').slice(1).join(' ')
-
-if (!text)
-return ctx.reply('Example: /base64 hello')
-
-const result =
-Buffer.from(text).toString('base64')
-
-ctx.reply(`
-🔐 BASE64
-
-${result}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// UUID
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('uuid', (ctx) => {
-
-ctx.reply(`
-🆔 UUID
-
-${crypto.randomUUID()}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// PASSWORD
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('genpass', (ctx) => {
-
-const pass =
-crypto.randomBytes(10).toString('hex')
-
-ctx.reply(`
-🔑 PASSWORD
-
-${pass}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// RANDOM IP
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('randomip', (ctx) => {
-
-const ip =
-`${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`
-
-ctx.reply(`
-🌐 RANDOM IP
-
-${ip}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// RANDOM USER
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('randomuser', (ctx) => {
-
-const users = [
-'ShadowRoot',
-'CyberGhost',
-'DarkNet',
-'NullByte',
-'HexaRoot'
-]
-
-const pick =
-users[Math.floor(Math.random()*users.length)]
-
-ctx.reply(`
-👤 RANDOM USER
-
-${pick}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// RANDOM EMAIL
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('randommail', (ctx) => {
-
-const mail =
-`user${Math.floor(Math.random()*999)}@gmail.com`
-
-ctx.reply(`
-📧 RANDOM EMAIL
-
-${mail}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// TIME
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('time', (ctx) => {
-
-const time = moment()
-.tz('Asia/Jakarta')
-.format('HH:mm:ss')
-
-ctx.reply(`
-⏰ TIME
-
-${time}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// DATE
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('date', (ctx) => {
-
-const date = moment()
-.tz('Asia/Jakarta')
-.format('DD/MM/YYYY')
-
-ctx.reply(`
-📅 DATE
-
-${date}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// RUNTIME
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('runtime', (ctx) => {
-
-ctx.reply(`
-💻 SYSTEM INFO
-
-Platform : ${os.platform()}
-RAM : ${(os.totalmem()/1024/1024/1024).toFixed(2)} GB
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// PLATFORM
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('platform', (ctx) => {
-
-ctx.reply(`
-📱 PLATFORM
-
-${os.platform()}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// RAM
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('ram', (ctx) => {
-
-ctx.reply(`
-💾 RAM
-
-${(os.totalmem()/1024/1024/1024).toFixed(2)} GB
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// CPU
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('cpu', (ctx) => {
-
-ctx.reply(`
-🖥 CPU
-
-${os.cpus()[0].model}
-`)
-
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// USERNAME CHECK
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('username', (ctx) => {
-
-const username =
-ctx.message.text.split(' ')[1]
-
-if (!username)
-return ctx.reply(
-'Example: /username johndoe'
-)
-
-ctx.reply(`
-🔍 USERNAME CHECK
-
-Username : ${username}
-
-Possible Platforms:
-• Telegram
-• GitHub
-• TikTok
-• Instagram
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// EMAIL CHECK
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('emailcheck', (ctx) => {
-
-const email =
-ctx.message.text.split(' ')[1]
-
-if (!email)
-return ctx.reply(
-'Example: /emailcheck test@gmail.com'
-)
-
-ctx.reply(`
-📧 EMAIL CHECK
-
-Email : ${email}
-
-✅ Valid Format
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// DOMAIN
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('domain', (ctx) => {
-
-const domain =
-ctx.message.text.split(' ')[1]
-
-if (!domain)
-return ctx.reply(
-'Example: /domain google.com'
-)
-
-ctx.reply(`
-🌍 DOMAIN INFO
-
-${domain}
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// OWNER ADD BALANCE
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('addbalance', (ctx) => {
-
-if (String(ctx.from.id) !== OWNER_ID)
-return ctx.reply('❌ Owner Only')
-
-const args = ctx.message.text.split(' ')
-
-const targetId = Number(args[1])
-const amount = Number(args[2])
-
-const users = loadDB()
-
-const user = users.find(
-u => u.id === targetId
-)
-
-if (!user)
-return ctx.reply('User not found')
-
-user.balance += amount
-
-saveDB(users)
-
-ctx.reply(`
-✅ Balance Added
-
-💰 +${amount}
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// OWNER ADD PREMIUM
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('addprem', (ctx) => {
-
-if (String(ctx.from.id) !== OWNER_ID)
-return ctx.reply('❌ Owner Only')
-
-const targetId =
-Number(ctx.message.text.split(' ')[1])
-
-const users = loadDB()
-
-const user = users.find(
-u => u.id === targetId
-)
-
-if (!user)
-return ctx.reply('User not found')
-
-user.premium = true
-
-saveDB(users)
-
-ctx.reply(`
-💎 Premium Added
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// ABOUT
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('about', (ctx) => {
-
-ctx.reply(`
-🤖 ALZZxCYBER
-l. =
-⚡ Advanced Telegram Bot
-🛡 Security System Active
-💻 Runtime NodeJS
-`)
-})
-
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-// OWNER
-//━━━━━━━━━━━━━━━━━━━━━━━━━━━━//
-
-bot.command('owner', (ctx) => {
-
-ctx.reply(`
-👑 OWNER
-
-ID : ${8229333628}
-`)
-})
-
-//
+export default function CyberBasicClassRoom() { const cyberFeatures = [ 'Matrix Rain Animation', 'Fake Hacker Terminal', 'Cyber Community Chat', 'Bug Bounty Learning', 'HTML & NodeJS Tutorial', 'Tools Termux Collection', 'Live Cyber Quiz', 'Member Dashboard', 'AI Cyber Assistant', 'CTF Mini Challenge', 'Admin Panel System', 'Cyber Leaderboard', 'Upload Tools & Files', 'Cyber Sound Effects', 'Linux Terminal Simulator', 'Cyber Notes System' ]; const guides = [ { title: "Apa Itu Cyber Security", desc: "Belajar dasar keamanan digital dan dunia cyber security untuk pemula.", video: "https://www.w3schools.com/html/mov_bbb.mp4" }, { title: "Belajar Bug Bounty", desc: "Panduan lengkap menjadi bug hunter pemula secara legal dan aman.", video: "https://www.w3schools.com/html/movie.mp4" }, { title: "Belajar HTML & Node JS", desc: "Dasar membuat website menggunakan HTML dan Node JS.", video: "https://www.w3schools.com/html/mov_bbb.mp4" }, { title: "Tools Termux", desc: "Daftar tools Termux untuk belajar coding dan cyber security.", video: "https://www.w3schools.com/html/movie.mp4" } ];
+
+return ( <div className="min-h-screen bg-black text-green-400 font-mono overflow-hidden"> <style>{` body { background:black; }
+
+.matrix-bg {
+      position: fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:0.08;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        #00ff88 0px,
+        transparent 2px,
+        transparent 4px
+      );
+      animation: matrixMove 8s linear infinite;
+    }
+
+    @keyframes matrixMove {
+      0% { transform: translateY(-100px); }
+      100% { transform: translateY(100px); }
+    }
+
+    @keyframes slideHack {
+      0% { transform: translateX(100%); opacity:0; }
+      100% { transform: translateX(0); opacity:1; }
+    }
+
+    @keyframes glow {
+      0%,100% { text-shadow:0 0 10px #00ff88; }
+      50% { text-shadow:0 0 30px #00ff88; }
+    }
+
+    @keyframes bgMove {
+      0% { background-position:0 0; }
+      100% { background-position:100% 100%; }
+    }
+  `}</style>
+  <div className="matrix-bg"></div>
+
+  <header className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <div className="absolute inset-0 bg-[radial-gradient(circle,_#00ff88_1px,_transparent_1px)] bg-[size:30px_30px] opacity-20 animate-[bgMove_20s_linear_infinite]"></div>
+
+    <div className="relative z-10 text-center px-6">
+      <h1
+        className="text-5xl md:text-8xl font-black tracking-widest text-green-400"
+        style={{
+          animation: 'slideHack 2s ease forwards, glow 3s infinite'
+        }}
+      >
+        CYBERBASICCLASSROOM
+      </h1>
+
+      <p className="mt-6 text-xl text-green-300 tracking-wider animate-pulse">
+        CREATE BY ALZZxBACK
+      </p>
+
+      <a
+        href="https://www.instagram.com/4rknnnajaaa?igsh=MXI4ZmR6bGNld2NwMw=="
+        className="inline-block mt-4 text-green-500 underline text-lg"
+      >
+        Instagram @4rknnnajaaa
+      </a>
+
+      <p className="mt-8 text-green-200 max-w-2xl mx-auto leading-8 text-lg">
+        KALO PENGEN CREATE AKUN FOLLOW AKUN IG GW DAN DM LANGSUNG MINTA CREATE ACCOUNT.
+      </p>
+
+      <div className="mt-12 bg-zinc-950 border border-green-500 rounded-3xl p-8 max-w-md mx-auto shadow-[0_0_40px_#00ff88]">
+        <h2 className="text-3xl font-bold mb-6 text-green-300">LOGIN ACCESS</h2>
+
+        <input
+          type="text"
+          placeholder="USERNAME"
+          className="w-full mb-4 p-4 rounded-xl bg-black border border-green-700 text-green-300"
+        />
+
+        <input
+          type="password"
+          placeholder="PASSWORD"
+          className="w-full mb-6 p-4 rounded-xl bg-black border border-green-700 text-green-300"
+        />
+
+        <button className="w-full bg-green-500 text-black font-black py-4 rounded-xl hover:scale-105 transition text-lg">
+          LOGIN SYSTEM
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section className="py-20 px-6 bg-black border-t border-green-800">
+    <div className="max-w-7xl mx-auto">
+      <h2 className="text-5xl font-black text-center text-green-300 mb-16 animate-pulse">
+        CYBER FEATURES SYSTEM
+      </h2>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {cyberFeatures.map((feature, index) => (
+          <div
+            key={index}
+            className="bg-zinc-950 border border-green-700 rounded-3xl p-6 shadow-[0_0_20px_#00ff88] hover:scale-105 transition"
+          >
+            <h3 className="text-2xl font-black text-green-300">
+              {feature}
+            </h3>
+
+            <p className="mt-4 text-green-200 leading-7">
+              Sistem cyber modern untuk komunitas CyberBasicClassRoom.
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section className="py-20 px-6 bg-zinc-950">
+    <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10">
+      <div className="bg-black border border-green-700 rounded-3xl p-8 shadow-[0_0_40px_#00ff88]">
+        <h2 className="text-4xl font-black text-green-300 mb-6">
+          TERMINAL SIMULATOR
+        </h2>
+
+        <div className="bg-black border border-green-500 rounded-2xl p-6 font-mono text-green-400 min-h-[300px] overflow-hidden">
+          <p>$ initializing cyber system...</p>
+          <p>$ connecting node server...</p>
+          <p>$ loading ethical hacking modules...</p>
+          <p>$ access granted ✔</p>
+          <p>$ welcome to CyberBasicClassRoom</p>
+          <p className="animate-pulse">_</p>
+        </div>
+      </div>
+
+      <div className="bg-black border border-green-700 rounded-3xl p-8 shadow-[0_0_40px_#00ff88]">
+        <h2 className="text-4xl font-black text-green-300 mb-6">
+          MEMBER DASHBOARD
+        </h2>
+
+        <div className="space-y-4 text-green-200 text-lg">
+          <div className="border border-green-700 rounded-2xl p-4">
+            👤 Username: Admin
+          </div>
+
+          <div className="border border-green-700 rounded-2xl p-4">
+            🏆 Rank: Elite Cyber Member
+          </div>
+
+          <div className="border border-green-700 rounded-2xl p-4">
+            📚 Completed Guides: 48
+          </div>
+
+          <div className="border border-green-700 rounded-2xl p-4">
+            ⚡ XP Level: 999
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="py-20 px-6 bg-black">
+    <div className="max-w-7xl mx-auto">
+      <h2 className="text-5xl font-black text-center text-green-300 mb-16">
+        TOOLS TERMUX & CYBER
+      </h2>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {[
+          'HTML Live Editor',
+          'HTTP Status Checker',
+          'Linux Commands',
+          'NodeJS Starter',
+          'Cyber Notes',
+          'Hash Generator'
+        ].map((tool, i) => (
+          <div
+            key={i}
+            className="bg-zinc-950 border border-green-700 rounded-3xl p-8 shadow-[0_0_20px_#00ff88]"
+          >
+            <h3 className="text-3xl font-black text-green-300 mb-4">
+              {tool}
+            </h3>
+
+            <button className="mt-4 bg-green-500 text-black px-6 py-3 rounded-xl font-black hover:scale-105 transition">
+              OPEN TOOL
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section className="py-20 px-6 bg-zinc-950">
+    <div className="max-w-6xl mx-auto bg-black border border-green-700 rounded-3xl p-10 shadow-[0_0_40px_#00ff88]">
+      <h2 className="text-5xl font-black text-green-300 text-center mb-10">
+        AI CYBER ASSISTANT
+      </h2>
+
+      <div className="bg-zinc-950 border border-green-700 rounded-2xl p-6 min-h-[250px] text-green-300 text-lg leading-9">
+        <p>🤖 Hello Member...</p>
+        <p>🤖 Saya siap membantu belajar cyber security.</p>
+        <p>🤖 Pilih materi:</p>
+        <p>• Bug Bounty</p>
+        <p>• HTML</p>
+        <p>• Linux</p>
+        <p>• Termux</p>
+        <p>• Node JS</p>
+      </div>
+    </div>
+  </section>
+
+  <section className="py-20 px-6 bg-zinc-950">
+    <div className="max-w-7xl mx-auto">
+      <h2 className="text-5xl font-black text-center text-green-300 mb-16 animate-pulse">
+        PANDUAN CYBER & BUG BOUNTY
+      </h2>
+
+      <div className="grid lg:grid-cols-2 gap-10">
+        {guides.map((guide, index) => (
+          <div
+            key={index}
+            className="bg-black border border-green-700 rounded-3xl overflow-hidden shadow-[0_0_30px_#00ff88] hover:scale-[1.02] transition"
+          >
+            <video
+              controls
+              autoPlay
+              muted
+              loop
+              className="w-full h-72 object-cover"
+            >
+              <source src={guide.video} type="video/mp4" />
+            </video>
+
+            <div className="p-8">
+              <h3 className="text-3xl font-black text-green-300 mb-4">
+                {guide.title}
+              </h3>
+
+              <p className="text-green-200 leading-8 text-lg">
+                {guide.desc}
+              </p>
+
+              <div className="mt-6 space-y-2 text-green-400">
+                <p>• Belajar dasar cyber security</p>
+                <p>• Panduan jadi bug hunter pemula</p>
+                <p>• Belajar HTML, HTTP, Node JS</p>
+                <p>• Tools Termux & coding</p>
+                <p>• Ethical hacking & keamanan website</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section className="py-20 px-6 bg-black">
+    <div className="max-w-6xl mx-auto bg-zinc-950 border border-green-700 rounded-3xl p-10 shadow-[0_0_40px_#00ff88]">
+      <h2 className="text-5xl font-black text-green-300 mb-8 text-center">
+        CARA MENJADI BUG HUNTER PEMULA
+      </h2>
+
+      <div className="grid md:grid-cols-2 gap-8 text-green-200 text-lg leading-9">
+        <div>
+          <p>1. Belajar HTML, CSS, JavaScript</p>
+          <p>2. Pelajari HTTP & HTTPS</p>
+          <p>3. Belajar dasar Linux & Networking</p>
+          <p>4. Gunakan Termux untuk latihan coding</p>
+          <p>5. Gunakan tools legal seperti OWASP ZAP</p>
+          <p>6. Fokus belajar ethical hacking</p>
+        </div>
+
+        <div>
+          <p>7. Belajar API dan keamanan website</p>
+          <p>8. Jangan menyerang website tanpa izin</p>
+          <p>9. Latihan di platform legal</p>
+          <p>10. Bangun portfolio & project GitHub</p>
+          <p>11. Konsisten belajar setiap hari</p>
+          <p>12. Join komunitas cyber security</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="py-12">
+    <div className="rounded-3xl overflow-hidden border border-green-700 shadow-2xl mb-10">
+      <video
+        autoPlay
+        muted
+        loop
+        className="w-full h-[300px] object-cover"
+      >
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <div className="bg-zinc-900 border border-green-800 rounded-3xl p-8 shadow-2xl">
+      <h2 className="text-4xl font-bold mb-6 text-green-300">
+        Apa Itu Bug Bounty?
+      </h2>
+
+      <p className="leading-8 text-green-200">
+        Bug bounty adalah program legal dari perusahaan yang mengizinkan
+        researcher keamanan mencari celah keamanan pada sistem mereka.
+        Jika menemukan bug yang valid, biasanya researcher mendapatkan
+        reward atau penghasilan.
+      </p>
+
+      <div className="mt-6 space-y-3 text-green-300">
+        <p>• Belajar dasar HTTP & HTTPS</p>
+        <p>• Pelajari HTML, JavaScript, dan API</p>
+        <p>• Gunakan tools legal seperti Burp Suite & OWASP ZAP</p>
+        <p>• Fokus pada pembelajaran ethical hacking</p>
+        <p>• Jangan menyerang website tanpa izin</p>
+      </div>
+    </div>
+  </section>
+
+  <footer className="py-12 bg-zinc-950 border-t border-green-800 text-center text-green-500 text-lg">
+    <p>CyberBasicClassRoom © 2026</p>
+    <p className="mt-3">CREATE BY ALZZxBACK</p>
+    <a
+      href="https://www.instagram.com/4rknnnajaaa?igsh=MXI4ZmR6bGNld2NwMw=="
+      className="block mt-4 underline"
+    >
+      Follow Instagram @4rknnnajaaa
+    </a>
+  </footer>
+</div>
+
+); }
