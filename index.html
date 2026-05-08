@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CyberBasicClassRoom</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Orbitron',sans-serif;
+}
+
+body{
+height:100vh;
+overflow:hidden;
+background:black;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+/* WALLPAPER */
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:
+linear-gradient(rgba(0,0,0,.8),rgba(0,0,0,.9)),
+url('wallpaper.png');
+background-size:cover;
+background-position:center;
+z-index:-2;
+}
+
+/* MATRIX */
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+opacity:.15;
+z-index:-1;
+}
+
+/* LOGIN BOX */
+
+.login-box{
+width:90%;
+max-width:400px;
+padding:30px;
+border-radius:25px;
+background:rgba(0,0,0,.75);
+border:1px solid #ff0000;
+box-shadow:0 0 25px rgba(255,0,0,.6);
+backdrop-filter:blur(8px);
+text-align:center;
+animation:fade 1.5s;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(30px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.logo{
+width:130px;
+border-radius:50%;
+border:2px solid red;
+box-shadow:0 0 20px red;
+margin-bottom:20px;
+}
+
+.title{
+font-size:32px;
+font-weight:900;
+color:#ff0000;
+text-shadow:0 0 15px red;
+margin-bottom:10px;
+}
+
+.subtitle{
+font-size:13px;
+color:#ccc;
+margin-bottom:25px;
+}
+
+/* INPUT */
+
+input{
+width:100%;
+padding:15px;
+margin:10px 0;
+border:none;
+outline:none;
+border-radius:12px;
+background:#111;
+color:white;
+border:1px solid #ff0000;
+}
+
+/* BUTTON */
+
+button{
+width:100%;
+padding:15px;
+margin-top:15px;
+border:none;
+border-radius:12px;
+background:red;
+color:white;
+font-weight:bold;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.03);
+background:#ff3333;
+}
+
+/* IG */
+
+.ig{
+margin-top:20px;
+font-size:13px;
+}
+
+.ig a{
+color:#ff4d4d;
+text-decoration:none;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="login-box">
+
+<img src="logo.png" class="logo">
+
+<div class="title">
+CYBERBASICCLASSROOM
+</div>
+
+<div class="subtitle">
+CREATE BY ALZZxBACK
+</div>
+
+<input type="text" id="user" placeholder="USERNAME">
+
+<input type="password" id="pass" placeholder="PASSWORD">
+
+<button onclick="login()">
+ENTER SYSTEM
+</button>
+
+<div class="ig">
+
+<a href="https://www.instagram.com/4rknnnajaaa?igsh=MXI4ZmR6bGNld2NwMw==" target="_blank">
+FOLLOW IG SAYA
+</a>
+
+</div>
+
+</div>
+
+<audio autoplay loop>
+<source src="CyberAura.mp3" type="audio/mp3">
+</audio>
+
+<script>
+
+/* LOGIN */
+
+function login(){
+
+const u=document.getElementById("user").value;
+const p=document.getElementById("pass").value;
+
+if(u==="ALZZxBACK" && p==="ArkanSource#12"){
+
+window.location.href="home.html";
+
+}else{
+
+alert("USERNAME ATAU PASSWORD SALAH");
+
+}
+
+}
+
+/* MATRIX */
+
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+const letters="01CYBER";
+const fontSize=14;
+const columns=canvas.width/fontSize;
+const drops=[];
+
+for(let x=0;x<columns;x++){
+drops[x]=1;
+}
+
+function draw(){
+
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="#ff0000";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+
+const text=letters.charAt(Math.floor(Math.random()*letters.length));
+
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+
+if(drops[i]*fontSize>canvas.height&&Math.random()>0.975){
+drops[i]=0;
+}
+
+drops[i]++;
+
+}
+
+}
+
+setInterval(draw,35);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Cyber Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Orbitron',sans-serif;
+scroll-behavior:smooth;
+}
+
+body{
+background:black;
+color:white;
+overflow-x:hidden;
+}
+
+/* BG */
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:
+linear-gradient(rgba(0,0,0,.88),rgba(0,0,0,.95)),
+url('wallpaper.png');
+background-size:cover;
+background-position:center;
+z-index:-2;
+}
+
+/* MATRIX */
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+opacity:.08;
+z-index:-1;
+}
+
+/* HERO */
+
+.hero{
+text-align:center;
+padding:40px 20px;
+}
+
+.hero img{
+width:150px;
+border-radius:50%;
+border:2px solid red;
+box-shadow:0 0 25px red;
+margin-bottom:20px;
+}
+
+.hero h1{
+font-size:45px;
+color:red;
+text-shadow:0 0 20px red;
+}
+
+.hero p{
+margin-top:10px;
+color:#aaa;
+}
+
+/* TERMINAL */
+
+.terminal{
+margin:20px;
+padding:20px;
+background:#0a0a0a;
+border:1px solid red;
+border-radius:15px;
+box-shadow:0 0 15px rgba(255,0,0,.5);
+font-size:13px;
+white-space:pre-wrap;
+}
+
+/* CARD */
+
+.card{
+margin:25px;
+background:#0a0a0a;
+border-radius:20px;
+overflow:hidden;
+border:1px solid red;
+box-shadow:0 0 20px rgba(255,0,0,.5);
+}
+
+.card iframe{
+width:100%;
+height:220px;
+border:none;
+}
+
+.content{
+padding:20px;
+}
+
+.content h2{
+color:red;
+margin-bottom:15px;
+font-size:28px;
+}
+
+.content p{
+line-height:1.8;
+color:#ccc;
+}
+
+/* TOOLS */
+
+.tools{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:15px;
+margin-top:20px;
+}
+
+.tool{
+background:#111;
+padding:15px;
+border-radius:12px;
+border:1px solid red;
+text-align:center;
+}
+
+/* NEWS */
+
+.news{
+margin:25px;
+padding:20px;
+background:#0a0a0a;
+border:1px solid red;
+border-radius:15px;
+box-shadow:0 0 20px rgba(255,0,0,.5);
+line-height:2;
+}
+
+/* FOOTER */
+
+footer{
+text-align:center;
+padding:40px;
+color:#777;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="hero">
+
+<img src="logo.png">
+
+<h1>CYBER DASHBOARD</h1>
+
+<p>WELCOME TO DARK CYBER REALM</p>
+
+</div>
+
+<div class="terminal" id="terminal"></div>
+
+<!-- CYBER -->
+
+<div class="card">
+
+<iframe src="https://www.youtube.com/embed/inWWhr5tnEA" allowfullscreen></iframe>
+
+<div class="content">
+
+<h2>Cyber Security</h2>
+
+<p>
+Belajar keamanan digital dan perlindungan sistem modern.
+</p>
+
+</div>
+
+</div>
+
+<!-- BUG -->
+
+<div class="card">
+
+<iframe src="https://www.youtube.com/embed/U_P23SqJaDc" allowfullscreen></iframe>
+
+<div class="content">
+
+<h2>Bug Hunter</h2>
+
+<p>
+Belajar mencari vulnerability secara legal dan aman.
+</p>
+
+</div>
+
+</div>
+
+<!-- HTML -->
+
+<div class="card">
+
+<iframe src="https://www.youtube.com/embed/qz0aGYrrlhU" allowfullscreen></iframe>
+
+<div class="content">
+
+<h2>HTML Learning</h2>
+
+<p>
+Belajar membuat website modern menggunakan HTML CSS dan JavaScript.
+</p>
+
+</div>
+
+</div>
+
+<!-- TOOLS -->
+
+<div class="card">
+
+<div class="content">
+
+<h2>Cyber Tools</h2>
+
+<div class="tools">
+
+<div class="tool">NMAP</div>
+<div class="tool">SQLMAP</div>
+<div class="tool">BURP SUITE</div>
+<div class="tool">OWASP ZAP</div>
+<div class="tool">TERMUX</div>
+<div class="tool">WIRESHARK</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- NEWS -->
+
+<div class="news" id="newsBox">
+
+Loading cyber news...
+
+</div>
+
+<footer>
+
+CyberBasicClassRoom © 2026
+
+</footer>
+
+<audio autoplay loop>
+<source src="CyberAura.mp3" type="audio/mp3">
+</audio>
+
+<script>
+
+/* TERMINAL */
+
+const terminalText=`
+
+root@cyber:~# connecting...
+access granted...
+loading dark protocol...
+database connected...
+welcome back...
+`;
+
+let i=0;
+
+function typing(){
+
+if(i<terminalText.length){
+
+document.getElementById("terminal").innerHTML+=terminalText.charAt(i);
+
+i++;
+
+setTimeout(typing,35);
+
+}
+
+}
+
+typing();
+
+/* MATRIX */
+
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+const letters="01CYBER";
+const fontSize=14;
+const columns=canvas.width/fontSize;
+
+const drops=[];
+
+for(let x=0;x<columns;x++){
+drops[x]=1;
+}
+
+function draw(){
+
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="red";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+
+const text=letters.charAt(Math.floor(Math.random()*letters.length));
+
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+
+if(drops[i]*fontSize>canvas.height&&Math.random()>0.975){
+
+drops[i]=0;
+
+}
+
+drops[i]++;
+
+}
+
+}
+
+setInterval(draw,35);
+
+/* NEWS */
+
+const news=[
+
+"🔥 Ethical Hacker sedang berkembang",
+"🚨 Cyber attack meningkat global",
+"⚡ Bug bounty makin populer",
+"🛡 Linux security update released",
+"💻 HTML masih penting untuk developer"
+
+];
+
+let index=0;
+
+function updateNews(){
+
+document.getElementById("newsBox").innerHTML=
+
+news[index];
+
+index++;
+
+if(index>=news.length){
+index=0;
+}
+
+}
+
+updateNews();
+
+setInterval(updateNews,4000);
+
+</script>
+
+</body>
+</html>
